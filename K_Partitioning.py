@@ -234,7 +234,7 @@ def calc_cost(edges, nodes):
                 if edges[i][0][j] in nodes[k]:
                     this_cut_edge = k
                     break
-            if (cut_edge is not -1 and this_cut_edge is not cut_edge):
+            if (cut_edge != -1 and this_cut_edge != cut_edge):
                 cost += 1
                 break
             else:
@@ -299,15 +299,15 @@ def calc_gain(nodes, node_info, node, edges):
         return
     
     if (len(nodes[max_partition]) + 1 <= W_MAX and len(nodes[node_info[node][0]]) - 1 >= W_MIN):
-        print("Node in question: " + str(node) + ", Max external degree: " + str(e_deg) + ", Partition External: " + str(max_partition) + ", Internal Degree: " + str(i_deg) + ", Internal partition: " + str(node_info[node][0]))
-        # Only make the swap if we're in the acceptable imbalance parameters
-        print("Number of nodes (B): " + str(len(nodes[max_partition])) + ", W_MAX: " + str(W_MAX) + ", Number of nodes (A): " + str(len(nodes[node_info[node][0]])) + ", W_MIN: " + str(W_MIN))
-        print_node_lists(nodes)
-        print("node_info")
-        print(node_info)
-        print("edges")
-        print(edges)
-        print(node_info)
+        # print("Node in question: " + str(node) + ", Max external degree: " + str(e_deg) + ", Partition External: " + str(max_partition) + ", Internal Degree: " + str(i_deg) + ", Internal partition: " + str(node_info[node][0]))
+        # # Only make the swap if we're in the acceptable imbalance parameters
+        # print("Number of nodes (B): " + str(len(nodes[max_partition])) + ", W_MAX: " + str(W_MAX) + ", Number of nodes (A): " + str(len(nodes[node_info[node][0]])) + ", W_MIN: " + str(W_MIN))
+        # print_node_lists(nodes)
+        # print("node_info")
+        # print(node_info)
+        # print("edges")
+        # print(edges)
+        # print(node_info)
         # We make the swap if the degree is higher, or if there's an imbalance
         if (e_deg > i_deg or (e_deg == i_deg and len(nodes[max_partition]) - len(nodes[node_info[node][0]]) > 0)):
             print(node)
@@ -319,8 +319,9 @@ def unlock_nodes(node_info):
         node_info[i][-1] = 0
 
 
-def main(input_file):
+def main(input_file, random_seed):
     # random.seed(9)
+    random.seed(random_seed)
     edges = parse_netlist(input_file)
     num_nodes, num_connections, num_rows, num_columns, edges = get_values(edges)
 

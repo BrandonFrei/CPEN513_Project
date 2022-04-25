@@ -10,9 +10,8 @@ BALANCING_FACTOR = 1.03
 NUM_PARTITIONS = 2
 
 # Parameters defined for balancing partition sizes
-W_MIN = int(.9 * (24 / NUM_PARTITIONS))
-W_MAX = math.ceil(BALANCING_FACTOR * (24 / NUM_PARTITIONS))
-
+global W_MIN 
+global W_MAX 
 def parse_netlist(rel_path):
     """Parses the netlist
 
@@ -97,14 +96,14 @@ def get_values(netlist):
         netlist (list): list version of netlist
 
     Returns:
-        num_blocks (int): number of blocks in netlist
+        num_nodes (int): number of blocks in netlist
         num_connections (int): number of connections between cells
         num_rows (int): number of grid rows for circuit to be placed
         num_columns (int): number of grid columns for circuit to be placed
         new_netlist (dict): the key is the net number, the 1st list associated is the respective net, the 2nd list
                             will contain the cost of the given net
     """
-    num_blocks, num_connections, num_rows, num_columns = netlist[0]
+    num_nodes, num_connections, num_rows, num_columns = netlist[0]
     netlist = netlist[1:]
     new_netlist = {}
     for i in range(num_connections):
@@ -113,13 +112,13 @@ def get_values(netlist):
         # the 0 will represet that the node has not yet been moved (it is unlocked)
         new_netlist[int(i)].append(0)
         new_netlist[int(i)].append(0)
-    return num_blocks, num_connections, num_rows, num_columns, new_netlist
+    return num_nodes, num_connections, num_rows, num_columns, new_netlist
 
-def init_cell_placements(num_blocks, num_rows, num_connections, num_columns, netlist):
+def init_cell_placements(num_nodes, num_rows, num_connections, num_columns, netlist):
     """Places cells into the nxm grid as specified by the input file (random locations)
 
     Args:
-        num_blocks (int): [description]
+        num_nodes (int): [description]
         num_rows (int): number of rows in cell grid
         num_connections (int): number of nets in cell grid
         num_columns (int): number of columns in cell grid
@@ -139,7 +138,7 @@ def init_cell_placements(num_blocks, num_rows, num_connections, num_columns, net
     random.shuffle(avail_locations)
 
     # after this, block locations looks like: block: [[current_cell_x, current_cell_y], [associated netlist nets]]
-    for i in range(num_blocks):
+    for i in range(num_nodes):
         block_locations[int(i)] = []
         associated_nets = []
         for j in range(num_connections):
@@ -217,16 +216,40 @@ def block_swap(nodes, node_info, edges, node_location_1, node_to_swap_1, node_lo
                 node_info[i][1].discard(j - 2)
             else:
                 node_info[i][1].add(j - 2)
+
     # swaps the partition location of the given nodes in node_info
-    # (working)
     node_info[node_to_swap_1][0] = node_location_2
 
     # update the lock
-    # (working)
     node_info[node_to_swap_1][-1] = 1
     return
 
-def calc_cost(node_info):
+def calc_cost(edges, nodes):
+    cost = 0
+    for i in range(len(edges)):
+        cut_edge = -1
+        for j in range(len(edges[i][0])):
+            this_cut_edge = -1
+            for k in range(len(nodes)):
+                if edges[i][0][j] in nodes[k]:
+                    this_cut_edge = k
+                    break
+            if (cut_edge is not -1 and this_cut_edge is not cut_edge):
+                cost += 1
+                break
+            else:
+                cut_edge = this_cut_edge
+    return cost
+def calc_cost_cuts(node_info):
+    """Sums the total edge cuts 
+
+    Args:
+        node_info (dict): [partition number][key (node number)][partition of vertex][<partitions attached to>][<number of attached nodes in partition A>]...
+                          [<locked status>]  
+
+    Returns:
+        cost: number of edge cuts
+    """
     cost = 0
     for i in range(len(node_info)):
         edge_cuts = 0
@@ -270,15 +293,24 @@ def calc_gain(nodes, node_info, node, edges):
             max_partition = i - 2
         if (node_info[node][i] > 0):
             is_solved = 1
-    # if (is_solved == 0):
-    #     return
-    # print("Max external degree: " + str(e_deg) + ", Partition External: " + str(max_partition) + ", Internal Degree: " + str(i_deg) + ", Internal partition: " + str(node_info[node][0]))
-    # Only make the swap if we're in the acceptable imbalance parameters
-    # print("Number of nodes (B): " + str(len(nodes[max_partition]) + 1) + ", W_MAX: " + str(W_MAX) + ", Number of nodes (A): " + str(len(nodes[node_info[node][0]]) - 1) + ", W_MIN: " + str(W_MIN))
+    # Because it's a greedy algorithm, if all of the nodes are already in a single partition, we don't need to swap.
+    # We only will be considering boundary nodes.
+    if (is_solved == 0):
+        return
+    
     if (len(nodes[max_partition]) + 1 <= W_MAX and len(nodes[node_info[node][0]]) - 1 >= W_MIN):
-        # print("in here")
+        print("Node in question: " + str(node) + ", Max external degree: " + str(e_deg) + ", Partition External: " + str(max_partition) + ", Internal Degree: " + str(i_deg) + ", Internal partition: " + str(node_info[node][0]))
+        # Only make the swap if we're in the acceptable imbalance parameters
+        print("Number of nodes (B): " + str(len(nodes[max_partition])) + ", W_MAX: " + str(W_MAX) + ", Number of nodes (A): " + str(len(nodes[node_info[node][0]])) + ", W_MIN: " + str(W_MIN))
+        print_node_lists(nodes)
+        print("node_info")
+        print(node_info)
+        print("edges")
+        print(edges)
+        print(node_info)
         # We make the swap if the degree is higher, or if there's an imbalance
         if (e_deg > i_deg or (e_deg == i_deg and len(nodes[max_partition]) - len(nodes[node_info[node][0]]) > 0)):
+            print(node)
             block_swap(nodes, node_info, edges, node_info[node][0], node, max_partition)
     return
 
@@ -287,20 +319,27 @@ def unlock_nodes(node_info):
         node_info[i][-1] = 0
 
 
-def main():
-    random.seed(9)
-    input_file = "benchmarks/cm138a.txt"
+def main(input_file):
+    # random.seed(9)
     edges = parse_netlist(input_file)
-    num_blocks, num_connections, num_rows, num_columns, edges = get_values(edges)
-    nodes = init_cell_placements(num_blocks, num_rows, num_connections, num_columns, edges)
+    num_nodes, num_connections, num_rows, num_columns, edges = get_values(edges)
+
+    # Set the global constants, based on the size of the inputs
+    global W_MIN 
+    W_MIN = int(.9 * (num_nodes / NUM_PARTITIONS))
+    global W_MAX 
+    W_MAX = math.ceil(BALANCING_FACTOR * (num_nodes / NUM_PARTITIONS))
+
+    nodes = init_cell_placements(num_nodes, num_rows, num_connections, num_columns, edges)
     nodes = split_nodes_random(nodes, NUM_PARTITIONS)
-    node_info = vertex_info_init(nodes, num_blocks, edges)
-    print(calc_cost(node_info))
+    node_info = vertex_info_init(nodes, num_nodes, edges)
+    print(calc_cost(edges, nodes))
     # print(node_info)
-    for _ in range(6):
+    for i in range(8):
         vertices = list(range(len(node_info)))
         random.shuffle(vertices)
-        for i in range(24):
+        print("iteration number " + str(i))
+        for i in range(num_nodes):
             calc_gain(nodes, node_info, vertices[i], edges)
         unlock_nodes(node_info)
     # print(calc_cost(node_info))
@@ -317,5 +356,6 @@ def main():
     print("edges")
     print(edges)
     # print_node_lists(nodes)
+    return edges, nodes, node_info, calc_cost(edges, nodes)
 
-main()
+# main()

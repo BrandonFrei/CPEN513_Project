@@ -1,4 +1,3 @@
-from tracemalloc import start
 import unittest
 from copy import deepcopy
 import os
@@ -18,9 +17,9 @@ import Recursive_Bi_Partitioning as Re_Bi
 global INPUT_TEST
 INPUT_TEST = "benchmarks/cm138a.txt"
 global RANDOM_SEED
-RANDOM_SEED = random.randint(0, 2147483647)
+RANDOM_SEED = 4
 global NUMBER_OF_PARTITIONS
-NUMBER_OF_PARTITIONS = 4
+NUMBER_OF_PARTITIONS = 2
 
 class TestStringMethods(unittest.TestCase):
 
@@ -47,9 +46,15 @@ class TestStringMethods(unittest.TestCase):
 
     def test_output_validity_bi(self):
         start = timer()
-        partition_lists, edges, cost = Re_Bi.main(INPUT_TEST, RANDOM_SEED, NUMBER_OF_PARTITIONS)
+        partition_lists, edges, cost, num_blocks = Re_Bi.main(INPUT_TEST, RANDOM_SEED, NUMBER_OF_PARTITIONS)
         end = timer()
         print("Time taken for recursive bi-partitioning: " + str(end - start) + ". Cost: " + str(cost))
+        all_nodes = []
+        for i in range(len(partition_lists)):
+            all_nodes = all_nodes + list(partition_lists[i].keys())
+        all_nodes.sort()
+        for i in range(num_blocks):
+            self.assertTrue(i == all_nodes[i])
         # Re_Bi.print_partitions(partition_lists)
     # def test_output_validity(self):
     #     start = timer()

@@ -1,7 +1,7 @@
 # CPEN513_Project
 Final project for CPEN513
 
-The project can be run by typing <python3 tests.py>
+The project can be run by running: python3 tests.py
 
 This will run both the recursive bi-partitioning, as well as the k-way partitioning. The time taken, as well
 as the final cost (measured in number of edge cuts) will be output. 

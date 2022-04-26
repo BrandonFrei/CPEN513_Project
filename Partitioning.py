@@ -449,6 +449,10 @@ def recursive_bi_partition(nodes, edges, num_blocks, seed):
     previous_uncut_edges = get_uncut_edges(edges)
     print("previous uncut edges: " + str(previous_uncut_edges))
     nodes_a, nodes_b = split_nodes_random_bi_partitioning(nodes)
+    print("initial nodes a & b")
+    print(nodes_a)
+    print("===")
+    print(nodes_b)
     edges = get_cost(nodes_a, nodes_b, edges)
     new_uncut_edges = get_uncut_edges(edges)
     print("new uncut edges: " + str(new_uncut_edges))
@@ -457,6 +461,10 @@ def recursive_bi_partition(nodes, edges, num_blocks, seed):
     ax1 = 0
     # print(nodes)
     nodes_a, nodes_b, edges = loop_3(nodes_a, nodes_b, edges, num_blocks, fig, ax1)
+    edges = get_cost(nodes_a, nodes_b, edges)
+    final_uncut_edges = get_uncut_edges(edges)
+    print("final_uncut_edges: " + str(final_uncut_edges))
+
     return nodes_a, nodes_b, edges
 
 def loop_3(nodes_a, nodes_b, edges, num_blocks, fig, ax1):

@@ -7,6 +7,19 @@ def print_partitions(partitions):
         print("Partition " + str(i) + ":")
         print(partitions[i])
 
+def get_cost_bi_recursive(partition_list, edges):
+    for i in range(len(edges)):
+        edges[i][1] = 0
+    for i in range(len(edges)):
+        this_edge = [0] * len(partition_list)
+        for j in range(len(edges[i][0])):
+            break_outer = 0
+            for k in range(len(partition_list)):
+                if edges[i][0][j] in partition_list[k]:
+                    this_edge[k] += 1
+        if (len(edges[i][0]) not in this_edge):
+            edges[i][1] = 1
+
 def main(INPUT_TEST, RANDOM_SEED, NUM_PARTITIONS):
     num_cuts = int(math.log2(NUM_PARTITIONS))
     nodes_a, nodes_b, edges, cost = part.main_function(INPUT_TEST, RANDOM_SEED)
@@ -21,5 +34,5 @@ def main(INPUT_TEST, RANDOM_SEED, NUM_PARTITIONS):
             temp_nodes.append(nodes_d)
         partition_lists = deepcopy(temp_nodes)
         num_blocks /= 2
-    return partition_lists, edges, cost, num_blocks_original
+    return partition_lists, edges, num_blocks_original
 main("benchmarks/cm138a.txt", 3, 8)

@@ -15,9 +15,10 @@ import Recursive_Bi_Partitioning as Re_Bi
 
 
 global INPUT_TEST
-INPUT_TEST = "benchmarks/cm138a.txt"
+
+INPUT_TEST = "benchmarks/cm162a.txt"
 global RANDOM_SEED
-RANDOM_SEED = 4
+RANDOM_SEED = 42
 global NUMBER_OF_PARTITIONS
 NUMBER_OF_PARTITIONS = 2
 
@@ -46,8 +47,10 @@ class TestStringMethods(unittest.TestCase):
 
     def test_output_validity_bi(self):
         start = timer()
-        partition_lists, edges, cost, num_blocks = Re_Bi.main(INPUT_TEST, RANDOM_SEED, NUMBER_OF_PARTITIONS)
+        partition_lists, edges, num_blocks = Re_Bi.main(INPUT_TEST, RANDOM_SEED, NUMBER_OF_PARTITIONS)
         end = timer()
+        Re_Bi.get_cost_bi_recursive(partition_lists, edges)
+        cost = part.calc_total_cost(edges)
         print("Time taken for recursive bi-partitioning: " + str(end - start) + ". Cost: " + str(cost))
         all_nodes = []
         for i in range(len(partition_lists)):

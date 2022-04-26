@@ -1,3 +1,4 @@
+from tracemalloc import start
 import unittest
 from copy import deepcopy
 import os
@@ -11,18 +12,21 @@ from timeit import default_timer as timer
 
 import K_Partitioning as part_k
 import Partitioning as part
+import Recursive_Bi_Partitioning as Re_Bi
 
 
 global INPUT_TEST
 INPUT_TEST = "benchmarks/cm138a.txt"
 global RANDOM_SEED
 RANDOM_SEED = random.randint(0, 2147483647)
+global NUMBER_OF_PARTITIONS
+NUMBER_OF_PARTITIONS = 4
 
 class TestStringMethods(unittest.TestCase):
 
     def test_output_validity_k(self):
         start = timer()
-        edges, nodes, node_info, cost = part_k.main(INPUT_TEST, RANDOM_SEED)
+        edges, nodes, node_info, cost = part_k.main(INPUT_TEST, RANDOM_SEED, NUMBER_OF_PARTITIONS)
         end = timer()
         print("Time taken for k-way partitioning: " + str(end - start) + ". Cost: " + str(cost))
         # Ensures that the count of the node_info structure is correct with respect to the number of nodes in each partition
@@ -39,34 +43,41 @@ class TestStringMethods(unittest.TestCase):
                                 adjacent_nodes[i].add(adjacent_node)
                 for i in range(len(nodes)): 
                     self.assertTrue(node_info[node_list_keys[node]][i + 2] == len(adjacent_nodes[i]))
-        print(cost)
-    def test_output_validity(self):
+        # part_k.print_node_lists(nodes)
+
+    def test_output_validity_bi(self):
         start = timer()
-        nodes_a, nodes_b, edges, cost = part.main_function(INPUT_TEST, RANDOM_SEED)
+        partition_lists, edges, cost = Re_Bi.main(INPUT_TEST, RANDOM_SEED, NUMBER_OF_PARTITIONS)
         end = timer()
-        print("time taken for recursive bi-partitioning: " + str(end - start) + ". Cost: " + str(cost))
-        print(nodes_a)
-        # print('========')
-        print(edges)
-        for i in range(len(edges)):
-            cost = 0
-            for j in range(len(edges[i][0])):
-                if(edges[i][0][j] in nodes_a):
-                    cost += 1
-            correct_output = 0
-            # if all the nodes are in nodes_a
-            if (len(edges[i][0]) == cost):
-                correct_output = 1
-            # if all the nodes are in nodes_b
-            elif (cost == 0):
-                correct_output = 1
-            # if there is a cut in an edge
-            elif (edges[i][1] == 1 and len(edges[i][0]) != cost):
-                correct_output = 1
-            # the broken edge
-            if (correct_output == 0):
-                print(edges[i][0])
-            self.assertTrue(correct_output == 1)
+        print("Time taken for recursive bi-partitioning: " + str(end - start) + ". Cost: " + str(cost))
+        # Re_Bi.print_partitions(partition_lists)
+    # def test_output_validity(self):
+    #     start = timer()
+    #     nodes_a, nodes_b, edges, cost = part.main_function(INPUT_TEST, RANDOM_SEED)
+    #     end = timer()
+    #     print("time taken for recursive bi-partitioning: " + str(end - start) + ". Cost: " + str(cost))
+    #     print(nodes_a)
+    #     # print('========')
+    #     print(edges)
+    #     for i in range(len(edges)):
+    #         cost = 0
+    #         for j in range(len(edges[i][0])):
+    #             if(edges[i][0][j] in nodes_a):
+    #                 cost += 1
+    #         correct_output = 0
+    #         # if all the nodes are in nodes_a
+    #         if (len(edges[i][0]) == cost):
+    #             correct_output = 1
+    #         # if all the nodes are in nodes_b
+    #         elif (cost == 0):
+    #             correct_output = 1
+    #         # if there is a cut in an edge
+    #         elif (edges[i][1] == 1 and len(edges[i][0]) != cost):
+    #             correct_output = 1
+    #         # the broken edge
+    #         if (correct_output == 0):
+    #             print(edges[i][0])
+    #         self.assertTrue(correct_output == 1)
 
 if __name__ == '__main__':
     unittest.main()

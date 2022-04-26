@@ -6,8 +6,9 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
+global BALANCING_FACTOR
 BALANCING_FACTOR = 1.03
-NUM_PARTITIONS = 2
+global NUM_PARTITIONS
 
 # Parameters defined for balancing partition sizes
 global W_MIN 
@@ -311,7 +312,6 @@ def calc_gain(nodes, node_info, node, edges):
         # print(node_info)
         # We make the swap if the degree is higher, or if there's an imbalance
         if (e_deg > i_deg or (e_deg == i_deg and len(nodes[max_partition]) - len(nodes[node_info[node][0]]) > 0)):
-            print(node)
             block_swap(nodes, node_info, edges, node_info[node][0], node, max_partition)
     return
 
@@ -320,7 +320,7 @@ def unlock_nodes(node_info):
         node_info[i][-1] = 0
 
 
-def main(input_file, random_seed):
+def main(input_file, random_seed, num_partitions):
     """Performs K-Way Partitioning
 
     Args:
@@ -331,6 +331,8 @@ def main(input_file, random_seed):
         edges, nodes, node_info, cost
     """
     # random.seed(9)
+    global NUM_PARTITIONS
+    NUM_PARTITIONS = num_partitions
     random.seed(random_seed)
     edges = parse_netlist(input_file)
     num_nodes, num_connections, num_rows, num_columns, edges = get_values(edges)
@@ -344,28 +346,22 @@ def main(input_file, random_seed):
     nodes = init_cell_placements(num_nodes, num_rows, num_connections, num_columns, edges)
     nodes = split_nodes_random(nodes, NUM_PARTITIONS)
     node_info = vertex_info_init(nodes, num_nodes, edges)
-    print(calc_cost(edges, nodes))
-    # print(node_info)
+
     for i in range(8):
         vertices = list(range(len(node_info)))
         random.shuffle(vertices)
-        print("iteration number " + str(i))
+
         for i in range(num_nodes):
             calc_gain(nodes, node_info, vertices[i], edges)
         unlock_nodes(node_info)
     # print(calc_cost(node_info))
-    print("final node info")
-    print(node_info)
-    print("final set of nodes")
-    print_node_lists(nodes)
     # print(edges)
     # print("first node info")
     # print(node_info)
     # block_swap(nodes, node_info, edges, 0, 1, 1)
     # print("second node info")
     # print(node_info)
-    print("edges")
-    print(edges)
+
     # print_node_lists(nodes)
     return edges, nodes, node_info, calc_cost(edges, nodes)
 

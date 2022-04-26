@@ -161,16 +161,19 @@ def calc_new_costs_vanilla(nodes_a, nodes_b, edges, swapped_node_1, swapped_node
     for i in range(len(edges_to_recalc)):
         node_a_cost = 0
         node_b_cost = 0
+        other_node_cost = 0
         # for each node in the edge
         for j in range(len(edges[edges_to_recalc[i]][0])):
             if (edges[edges_to_recalc[i]][0][j] in nodes_a):
                 node_a_cost = 1
-            if (edges[edges_to_recalc[i]][0][j] in nodes_b):
+            elif (edges[edges_to_recalc[i]][0][j] in nodes_b):
                 node_b_cost = 1
-            if (node_a_cost & node_b_cost):
+            elif (node_a_cost & node_b_cost):
                 break
+            else:
+                other_node_cost += 1
         # if there are nodes on both sides
-        if (node_a_cost & node_b_cost):
+        if ((node_a_cost & node_b_cost) or (other_node_cost > 0 and other_node_cost < len(edges[edges_to_recalc[i]][0]))):
             if (edges[edges_to_recalc[i]][1] == 0):
                 delta_cost += 1
             edges[edges_to_recalc[i]][1] = 1
@@ -244,7 +247,7 @@ def calc_each_gain_initial_vanilla(nodes_a, nodes_b, edges):
         for j in range(len(nodes_a[node_a_keys[i]][0])):
             if(nodes_a[node_a_keys[i]][2] == 1):
                 continue
-            if (edges[nodes_a[node_a_keys[i]][0][j]][1] == 1):
+            elif (edges[nodes_a[node_a_keys[i]][0][j]][1] == 1):
                 gain += 3 / (len(edges[nodes_a[node_a_keys[i]][0][j]][0]))
             else:
                 gain -= 1
@@ -255,7 +258,7 @@ def calc_each_gain_initial_vanilla(nodes_a, nodes_b, edges):
         for j in range(len(nodes_b[node_b_keys[i]][0])):
             if(nodes_b[node_b_keys[i]][2] == 1):
                 continue
-            if (edges[nodes_b[node_b_keys[i]][0][j]][1] == 1):
+            elif (edges[nodes_b[node_b_keys[i]][0][j]][1] == 1):
                 gain += 3 / (len(edges[nodes_b[node_b_keys[i]][0][j]][0]))
             else:
                 gain -= 1
@@ -282,7 +285,7 @@ def calc_each_gain_initial_vanilla2(nodes_a, nodes_b, edges, swapped_node_1, swa
         for j in range(len(nodes_a[node_a_keys[i]][0])):
             if(nodes_a[node_a_keys[i]][2] == 1):
                 continue
-            if (edges[nodes_a[node_a_keys[i]][0][j]][1] == 1):
+            elif (edges[nodes_a[node_a_keys[i]][0][j]][1] == 1):
                 if ((swapped_node_1 in edges[nodes_a[node_a_keys[i]][0][j]][0] and swapped_node_2 in edges[nodes_a[node_a_keys[i]][0][j]][0])
                     and (edges[nodes_a[node_a_keys[i]][0][j]][2] == len(edges[nodes_a[node_a_keys[i]][0][j]][0]) - 1)):
                     gain += 1
@@ -444,26 +447,17 @@ def recursive_bi_partition(nodes, edges, num_blocks, seed):
         nodes (dict): dict of nodes: for each key [<list of associated edges>][<current gain>][<if the node is locked>]
         edges (dict): dict of edges: for each key [<list of nodes>][<1 or 0, representing cost>][<# nodes in partition a>]
     """
-    print("Entering Recursive Bi-Partitioning")
     random.seed(seed)
     previous_uncut_edges = get_uncut_edges(edges)
-    print("previous uncut edges: " + str(previous_uncut_edges))
     nodes_a, nodes_b = split_nodes_random_bi_partitioning(nodes)
-    print("initial nodes a & b")
-    print(nodes_a)
-    print("===")
-    print(nodes_b)
     edges = get_cost(nodes_a, nodes_b, edges)
     new_uncut_edges = get_uncut_edges(edges)
-    print("new uncut edges: " + str(new_uncut_edges))
-    print(edges)
     fig = 0
     ax1 = 0
-    # print(nodes)
+    unlock_all_nodes(nodes_a, nodes_b)
     nodes_a, nodes_b, edges = loop_3(nodes_a, nodes_b, edges, num_blocks, fig, ax1)
     edges = get_cost(nodes_a, nodes_b, edges)
     final_uncut_edges = get_uncut_edges(edges)
-    print("final_uncut_edges: " + str(final_uncut_edges))
 
     return nodes_a, nodes_b, edges
 
@@ -501,7 +495,7 @@ def loop_3(nodes_a, nodes_b, edges, num_blocks, fig, ax1):
             nodes_a, nodes_b = swap_nodes(nodes_a, nodes_b, edges, highest_cost_node_a, highest_cost_node_b)
 
             edges, delta_cost = calc_new_costs_vanilla(nodes_a, nodes_b, edges, highest_cost_node_a, highest_cost_node_b)
-            nodes_a, nodes_b = calc_each_gain_initial_vanilla2(nodes_a, nodes_b, edges, highest_cost_node_a, highest_cost_node_b)
+            nodes_a, nodes_b = calc_each_gain_initial_vanilla(nodes_a, nodes_b, edges)
             temp_cost += delta_cost
 
             if (cost > temp_cost):
@@ -516,7 +510,7 @@ def loop_3(nodes_a, nodes_b, edges, num_blocks, fig, ax1):
         # ax1.plot(range(i+1), cost_array, c="red", linestyle='-')
         # plt.pause(0.05)
         i = i + 1
-        print(cost)
+
         if(is_change == 1):
             nodes_a = deepcopy(best_cut_a)
             nodes_b = deepcopy(best_cut_b)

@@ -116,12 +116,12 @@ def get_cost(nodes_a, nodes_b, edges):
             if (edge in nodes_a):
                 nodes_in_a += 1
                 all_in_set_a = 1
-            if (edge in nodes_b):
+            elif (edge in nodes_b):
                 all_in_set_b = 1
             else:
                 in_other_partition += 1
         edges[i][2] = nodes_in_a
-        if ((all_in_set_a and all_in_set_b) or (in_other_partition > 0 and in_other_partition != len(edges[i][0]))):
+        if ((all_in_set_a and all_in_set_b) or (in_other_partition > 0 and in_other_partition < len(edges[i][0]))):
             edges[i][1] = 1
         else:
             edges[i][1] = 0

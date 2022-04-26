@@ -45,9 +45,9 @@ class TestStringMethods(unittest.TestCase):
         nodes_a, nodes_b, edges, cost = part.main_function(INPUT_TEST, RANDOM_SEED)
         end = timer()
         print("time taken for recursive bi-partitioning: " + str(end - start) + ". Cost: " + str(cost))
-        # print(nodes_a)
+        print(nodes_a)
         # print('========')
-        # print(edges)
+        print(edges)
         for i in range(len(edges)):
             cost = 0
             for j in range(len(edges[i][0])):

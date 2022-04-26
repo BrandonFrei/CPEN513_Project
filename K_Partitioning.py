@@ -181,7 +181,7 @@ def block_swap(nodes, node_info, edges, node_location_1, node_to_swap_1, node_lo
     """Swaps 2 blocks
 
     Args:
-        nodes (list): list of dicts containing the variable number of partitions: 
+        nodes (list): list of dicts containing the variable number of partitions: [partition number][key (node number)][associated edges]
                       
         node_info (dict): [partition number][key (node number)][partition of vertex][<partitions attached to>][<number of attached nodes in partition A>]...
                           [<locked status>]  
@@ -225,6 +225,15 @@ def block_swap(nodes, node_info, edges, node_location_1, node_to_swap_1, node_lo
     return
 
 def calc_cost(edges, nodes):
+    """Caclulates the cost of the partitioning
+
+    Args:
+        edges (dict): edges and the vertexes attached to each
+        nodes (list of dicts): nodes in each partition: [partition number][key (node number)][associated edges]
+
+    Returns:
+        int: number of edge cuts
+    """
     cost = 0
     for i in range(len(edges)):
         cut_edge = -1
@@ -272,14 +281,6 @@ def calc_gain(nodes, node_info, node, edges):
     Returns:
         null
     """
-    # print(node)
-    # if (node == 15):
-    #     print("edges")
-    #     print(edges)
-    #     print("initial node list")
-    #     print_node_lists(nodes)
-    #     print("initial node info")
-    #     print(node_info)
     i_deg = node_info[node][node_info[node][0] + 2]
     e_deg = -1
     max_partition = -1
@@ -320,6 +321,15 @@ def unlock_nodes(node_info):
 
 
 def main(input_file, random_seed):
+    """Performs K-Way Partitioning
+
+    Args:
+        input_file (string): filepath to input file
+        random_seed (int): random seed
+
+    Returns:
+        edges, nodes, node_info, cost
+    """
     # random.seed(9)
     random.seed(random_seed)
     edges = parse_netlist(input_file)

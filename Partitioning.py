@@ -72,6 +72,29 @@ def split_nodes_random(nodes):
             nodes_b[i] = deepcopy(nodes[i])
     return nodes_a, nodes_b
 
+def split_nodes_random_bi_partitioning(nodes):
+    """Splits the nodes randomly into 2 equally sized lists (within 1)
+
+    Args:
+        nodes (list): nodes of the circuit
+
+    Returns:
+        nodes_a, nodes_b (lists): list of nodes of the circuit
+    """
+    nodes_a = {}
+    nodes_b = {}
+    num_nodes = len(nodes)
+    node_locations = list(nodes.keys())
+    counter = 0
+    random.shuffle(node_locations)
+    for i in node_locations:
+        if (counter % 2 == 0):
+            nodes_a[i] = deepcopy(nodes[i])
+        else:
+            nodes_b[i] = deepcopy(nodes[i])
+        counter += 1
+    return nodes_a, nodes_b
+
 def get_cost(nodes_a, nodes_b, edges):
     """Gets the cost (number of cuts)
 
@@ -86,6 +109,7 @@ def get_cost(nodes_a, nodes_b, edges):
     for i in range(len(edges)):
         all_in_set_a = 0
         all_in_set_b = 0
+        in_other_partition = 0
         nodes_in_a = 0
         for j in range(len(edges[i][0])):
             edge = edges[i][0][j]
@@ -94,8 +118,10 @@ def get_cost(nodes_a, nodes_b, edges):
                 all_in_set_a = 1
             if (edge in nodes_b):
                 all_in_set_b = 1
+            else:
+                in_other_partition += 1
         edges[i][2] = nodes_in_a
-        if (all_in_set_a and all_in_set_b):
+        if ((all_in_set_a and all_in_set_b) or (in_other_partition > 0 and in_other_partition != len(edges[i][0]))):
             edges[i][1] = 1
         else:
             edges[i][1] = 0
@@ -404,7 +430,34 @@ def main_function(input_file, random_seed):
 
     return nodes_a, nodes_b, edges, new_cost
 
+def get_uncut_edges(edges):
+    uncut_edges = []
+    for i in range(len(edges)):
+        if (edges[i][1] == 0):
+            uncut_edges.append(i)
+    return uncut_edges
 
+def recursive_bi_partition(nodes, edges, num_blocks, seed):
+    """Performs bi_partitioning
+
+    Args:
+        nodes (dict): dict of nodes: for each key [<list of associated edges>][<current gain>][<if the node is locked>]
+        edges (dict): dict of edges: for each key [<list of nodes>][<1 or 0, representing cost>][<# nodes in partition a>]
+    """
+    print("Entering Recursive Bi-Partitioning")
+    random.seed(seed)
+    previous_uncut_edges = get_uncut_edges(edges)
+    print("previous uncut edges: " + str(previous_uncut_edges))
+    nodes_a, nodes_b = split_nodes_random_bi_partitioning(nodes)
+    edges = get_cost(nodes_a, nodes_b, edges)
+    new_uncut_edges = get_uncut_edges(edges)
+    print("new uncut edges: " + str(new_uncut_edges))
+    print(edges)
+    fig = 0
+    ax1 = 0
+    # print(nodes)
+    nodes_a, nodes_b, edges = loop_3(nodes_a, nodes_b, edges, num_blocks, fig, ax1)
+    return nodes_a, nodes_b, edges
 
 def loop_3(nodes_a, nodes_b, edges, num_blocks, fig, ax1):
     """Main loop
